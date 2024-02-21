@@ -72,9 +72,9 @@ def pth_to_onnx(torch_model,output_path):
                       opset_version=14,    #操作的版本，稳定操作集为9
                       do_constant_folding=True,          # 是否执行常量折叠优化
                       input_names=["input"],        # 输入名
-                      output_names=["output"]      # 输出名
-                      # dynamic_axes={"input": {0: "batch_size"},         # 批处理变量
-                      #               "output": {0: "batch_size"}}
+                      output_names=["output"],      # 输出名
+                      dynamic_axes={"input": {0: "batch_size", 1: "block_size"},
+                                    "output": {0: "batch_size", 1: "block_size"}}
                       )
     onnx_model = onnx.load('model_all.onnx')    #加载.onnx文件
     onnx.checker.check_model(onnx_model)
@@ -86,8 +86,27 @@ def onnx_to_pb(output_path):
     '''
     model = onnx.load(output_path) #加载.onnx模型文件
     tf_rep = prepare(model)
-    tf_rep.export_graph('model_all.pb')    #保存最终的.pb文件
+    tf_rep.export_graph('model.pb')    #保存最终的.pb文件
 
+
+from onnx import helper
+
+def onnx_to_json(output_path):
+    '''
+    将.onnx模型保存为.json文件模型
+    '''
+    model = onnx.load(output_path)  # 加载.onnx模型文件
+    tf_rep = prepare(model)
+    
+    # 获取ONNX模型的图结构
+    onnx_graph = model.graph
+    
+    # 构建一个包含ONNX图结构的JSON对象
+    json_model = helper.printable_graph(onnx_graph)
+    
+    with open('model_all.json', 'w') as f:  # 保存为JSON文件
+        f.write(json_model)
+        
 def onnx_to_h5(output_path ):
     '''
     将.onnx模型保存为.h5文件模型,并打印出模型的大致结构
@@ -110,5 +129,6 @@ if __name__=='__main__':
     pth_to_onnx(model,output_path)  #执行pth转onnx函数，具体转换参数去该函数里面修改
     # onnx_pre(output_path)   #【可选项】若有需要，可以使用onnxruntime进行部署测试，看所转换模型是否可用，其中，output_path指加载进去的onnx格式模型所在路径及文件名
     onnx_to_pb(output_path)   #将onnx模型转换为pb模型
-    onnx_to_h5(output_path)   #将onnx模型转换为h5模型
+    # # onnx_to_h5(output_path)   #将onnx模型转换为h5模型
+    # onnx_to_json(output_path)
 
