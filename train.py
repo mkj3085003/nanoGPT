@@ -217,6 +217,9 @@ def estimate_loss():
         losses = torch.zeros(eval_iters)
         for k in range(eval_iters):
             X, Y = get_batch(split)
+            # print("x size:", X.size())
+            # print("y size:", Y.size())
+
             with ctx:
                 logits, loss = model(X, Y)
             losses[k] = loss.item()
@@ -281,6 +284,13 @@ while True:
                 }
                 print(f"saving checkpoint to {out_dir}")
                 torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
+                
+                #  # 保存 TensorFlow 模型
+                # input_var = Variable(torch.FloatTensor(X))
+                # k_model = pytorch_to_keras(model, input_var, [(batch_size,block_size)], verbose=True, names='short')
+                # k_model.save('model.h5')
+                # # model_path = os.path.join(out_dir, 'model.h5')
+                # tf.keras.models.save_model(model, model_path)
     if iter_num == 0 and eval_only:
         break
 
